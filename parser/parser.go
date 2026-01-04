@@ -1,4 +1,4 @@
-package telegram_export_parser
+package parser
 
 import (
 	"encoding/json"
@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"github.com/Nikalively/telegram-export-parser"
 )
 
 // ParseSingleFile parses a single result.json file and returns events.
-func ParseSingleFile(filePath string) ([]Event, error) {
+func ParseSingleFile(filePath string) ([]telegram_export_parser.Event, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
@@ -21,9 +23,9 @@ func ParseSingleFile(filePath string) ([]Event, error) {
 		return nil, fmt.Errorf("failed to unmarshal JSON: %w", err)
 	}
 
-	var events []Event
+	var events []telegram_export_parser.Event
 	for _, msg := range rawMessages {
-		event := Event{
+		event := telegram_export_parser.Event{
 			ID:     msg.ID,
 			FromID: msg.FromID,
 			Text:   msg.Text,
@@ -39,8 +41,8 @@ func ParseSingleFile(filePath string) ([]Event, error) {
 }
 
 // MergeFromFolders merges events from multiple export folders, sorts by date, and deduplicates by ID.
-func MergeFromFolders(folderPaths []string) (*MergedEvents, error) {
-	eventMap := make(map[int64]Event)
+func MergeFromFolders(folderPaths []string) (*telegram_export_parser.MergedEvents, error) {
+	eventMap := make(map[int64]telegram_export_parser.Event)
 	for _, folder := range folderPaths {
 		files, err := filepath.Glob(filepath.Join(folder, "result.json"))
 		if err != nil {
@@ -57,7 +59,7 @@ func MergeFromFolders(folderPaths []string) (*MergedEvents, error) {
 		}
 	}
 
-	events := make([]Event, 0, len(eventMap))
+	events := make([]telegram_export_parser.Event, 0, len(eventMap))
 	for _, event := range eventMap {
 		events = append(events, event)
 	}
@@ -66,17 +68,17 @@ func MergeFromFolders(folderPaths []string) (*MergedEvents, error) {
 		return events[i].Date.Before(events[j].Date)
 	})
 
-	return &MergedEvents{Events: events}, nil
+	return &telegram_export_parser.MergedEvents{Events: events}, nil
 }
 
 // RawMessage is the raw structure from Telegram JSON export.
 type RawMessage struct {
-	ID       int64     `json:"id"`
-	FromID   string    `json:"from_id"`
-	Text     string    `json:"text"`
-	Date     time.Time `json:"date"`
-	Chat     RawChat   `json:"chat"`
-	Entities []Entity  `json:"entities,omitempty"`
+	ID       int64                           `json:"id"`
+	FromID   string                          `json:"from_id"`
+	Text     string                          `json:"text"`
+	Date     time.Time                       `json:"date"`
+	Chat     RawChat                         `json:"chat"`
+	Entities []telegram_export_parser.Entity `json:"entities,omitempty"`
 }
 
 // RawChat represents the chat in raw JSON.
