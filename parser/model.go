@@ -1,4 +1,4 @@
-package telegram_export_parser
+package parser
 
 import (
 	"time"
@@ -25,4 +25,23 @@ type Entity struct {
 // MergedEvents holds a sorted list of unique events.
 type MergedEvents struct {
 	Events []Event `json:"events"`
+}
+
+// TelegramExport represents the root structure of Telegram JSON export
+type TelegramExport struct {
+	Name     string       `json:"name"`
+	Type     string       `json:"type"`
+	ID       int64        `json:"id"`
+	Messages []RawMessage `json:"messages"`
+}
+
+// RawMessage is the raw structure from Telegram JSON export.
+type RawMessage struct {
+	ID       int64       `json:"id"`
+	Type     string      `json:"type"`
+	Date     string      `json:"date"`
+	FromID   string      `json:"from_id"`
+	From     string      `json:"from"`
+	Text     interface{} `json:"text"`
+	Entities []Entity    `json:"text_entities,omitempty"`
 }
